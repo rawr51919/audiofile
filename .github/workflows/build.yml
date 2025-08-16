@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-
   workflow_dispatch:
     inputs:
       release_type:
@@ -30,30 +29,34 @@ jobs:
           sudo apt-get install -y \
             build-essential autoconf automake libtool pkg-config \
             libasound2-dev gettext intltool gtk-doc-tools \
-            asciidoc-base xsltproc
+            asciidoc dblatex
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
-          ./autogen.sh
+          ./autogen.sh --enable-docs
           chmod +x ./configure
           ./configure
           make -j$(nproc)
-          # Build docs if available
-          if [ -d docs ]; then
-            make -C docs
-          fi
+
+      - name: Build documentation
+        if: success()
+        run: |
+          cd docs
+          make html pdf
+          cd ..
 
       - name: Strip binaries
         run: find . -type f -executable -exec strip {} \; || true
 
-      - name: Upload Linux artifact
+      - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-linux
           path: |
             ./audiofile
             ./docs/html
+            ./docs/pdf
 
   build-windows-x64:
     name: Cross-build Windows x64
@@ -68,29 +71,35 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
             make binutils-mingw-w64 automake autoconf libtool pkg-config \
-            gettext intltool gtk-doc-tools asciidoc-base xsltproc
+            gettext intltool gtk-doc-tools \
+            asciidoc dblatex
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
-          ./autogen.sh
+          ./autogen.sh --enable-docs
           chmod +x ./configure
           ./configure CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++
           make -j$(nproc)
-          if [ -d docs ]; then
-            make -C docs
-          fi
+
+      - name: Build documentation
+        if: success()
+        run: |
+          cd docs
+          make html pdf
+          cd ..
 
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec x86_64-w64-mingw32-strip {} \; || true
 
-      - name: Upload Windows x64 artifact
+      - name: Upload Windows x64 artifacts
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-windows-x64
           path: |
             ./audiofile.exe
             ./docs/html
+            ./docs/pdf
 
   build-windows-x86:
     name: Cross-build Windows x86
@@ -105,29 +114,35 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-i686 g++-mingw-w64-i686 \
             make binutils-mingw-w64 automake autoconf libtool pkg-config \
-            gettext intltool gtk-doc-tools asciidoc-base xsltproc
+            gettext intltool gtk-doc-tools \
+            asciidoc dblatex
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
-          ./autogen.sh
+          ./autogen.sh --enable-docs
           chmod +x ./configure
           ./configure CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++
           make -j$(nproc)
-          if [ -d docs ]; then
-            make -C docs
-          fi
+
+      - name: Build documentation
+        if: success()
+        run: |
+          cd docs
+          make html pdf
+          cd ..
 
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec i686-w64-mingw32-strip {} \; || true
 
-      - name: Upload Windows x86 artifact
+      - name: Upload Windows x86 artifacts
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-windows-x86
           path: |
             ./audiofile.exe
             ./docs/html
+            ./docs/pdf
 
   build-macos:
     name: Build macOS
@@ -138,29 +153,34 @@ jobs:
 
       - name: Install dependencies
         run: brew install pkg-config automake libtool autoconf \
-          gettext intltool gtk-doc asciidoc xsltproc
+                        gettext intltool gtk-doc asciidoc dblatex
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
-          ./autogen.sh
+          ./autogen.sh --enable-docs
           chmod +x ./configure
           ./configure
           make -j$(sysctl -n hw.ncpu)
-          if [ -d docs ]; then
-            make -C docs
-          fi
+
+      - name: Build documentation
+        if: success()
+        run: |
+          cd docs
+          make html pdf
+          cd ..
 
       - name: Strip binaries
         run: find . -type f -perm +111 -exec strip {} \; || true
 
-      - name: Upload macOS artifact
+      - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-macos
           path: |
             ./audiofile
             ./docs/html
+            ./docs/pdf
 
   release:
     name: Create GitHub Release
@@ -204,10 +224,16 @@ jobs:
           prerelease: ${{ github.event.inputs.release_type != 'main' }}
           files: |
             release/linux/audiofile
-            release/linux/docs/html
             release/windows-x64/audiofile.exe
             release/windows-x86/audiofile.exe
             release/macos/audiofile
+            release/linux/docs/html
+            release/linux/docs/pdf
+            release/windows-x64/docs/html
+            release/windows-x64/docs/pdf
+            release/windows-x86/docs/html
+            release/windows-x86/docs/pdf
             release/macos/docs/html
+            release/macos/docs/pdf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

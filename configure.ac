@@ -5,7 +5,6 @@ AC_CONFIG_SRCDIR([libaudiofile/AIFF.cpp])
 dnl Set libtool version information.
 AUDIOFILE_VERSION_INFO=1:0:0
 AUDIOFILE_VERSION=$PACKAGE_VERSION
-
 AC_SUBST(AUDIOFILE_VERSION)
 AC_SUBST(AUDIOFILE_VERSION_INFO)
 
@@ -13,20 +12,24 @@ AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS([config.h])
 
+dnl --- Ensure directories for docs and po exist ---
+AS_IF([! test -d "po"], [AC_MSG_NOTICE([Creating po/ directory]) ; mkdir -p po])
+AS_IF([! test -d "docs"], [AC_MSG_NOTICE([Creating docs/ directory]) ; mkdir -p docs])
+
 dnl --- Documentation / Internationalization support ---
 AM_GNU_GETTEXT([external])        dnl Gettext support
 IT_PROG_INTLTOOL                  dnl Intltool support
 GTK_DOC_INIT                       dnl GtkDoc support
 
 dnl Checks for programs.
-AC_PROG_CC                        dnl use modern macro instead of AC_PROG_CC_C99
+AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 LT_INIT                           dnl replaces AM_PROG_LIBTOOL
 
 dnl Ensure C99 support
 AC_COMPILE_IFELSE(
-  [AC_LANG_PROGRAM([[ 
+  [AC_LANG_PROGRAM([[
     #if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
     #error "C99 support required"
     #endif
@@ -94,7 +97,7 @@ AS_IF([test "$enable_coverage" = "yes"],
    AC_SUBST(LCOV)
    AC_SUBST(GENHTML)
    AS_IF([test "$LCOV" = :],
-     [AC_MSG_ERROR([lcov must be installed for code coverage: http://ltp.sourceforge.net/coverage/lcov.php])])])
+     [AC_MSG_ERROR([lcov must be installed for code coverage])])])
 
 AC_ARG_ENABLE(valgrind,
   AS_HELP_STRING([--enable-valgrind], [enable testing with Valgrind]),
