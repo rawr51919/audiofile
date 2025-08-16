@@ -22,11 +22,12 @@ compile
 config.cache
 config.guess
 config.h
-config.h.in
+config.h.in*
 config.log
 config.status
 config.sub
-configure
+config.rpath
+configure*
 depcomp
 install-sh
 intl
@@ -41,3 +42,5 @@ stamp-h.in
 stamp-h1
 test-driver
 version.h
+m4*
+po

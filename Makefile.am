@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = gtest libaudiofile sfcommands test examples docs
+SUBDIRS = gtest libaudiofile sfcommands test examples docs po
 
 EXTRA_DIST = \
 	ACKNOWLEDGEMENTS \
@@ -15,7 +15,7 @@ EXTRA_DIST = \
 
 pkgconfig_DATA = audiofile.pc
 
-ACLOCAL_AMFLAGS = -I m4
+# ACLOCAL_AMFLAGS = -I m4
 
 dist-hook: audiofile.spec
 	cp audiofile.spec $(distdir)
