@@ -41,12 +41,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#if defined(__linux__)
-	#include <alsa/asoundlib.h>
-	#define USE_ALSA 1
+#ifdef HAVE_ALSA
+#include <alsa/asoundlib.h>
+#elif defined(HAVE_PORTAUDIO)
+#include <portaudio.h>
 #else
-	#include <portaudio.h>
-	#define USE_ALSA 0
+#error "No audio backend available!"
 #endif
 
 int main(int argc, char **argv)

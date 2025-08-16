@@ -130,6 +130,21 @@ else
   AC_DEFINE_UNQUOTED([ENABLE_FLAC], [0], [Whether FLAC is enabled.])
 fi
 
+# Check for Linux
+AC_CHECK_LIB([asound], [snd_pcm_open], [have_alsa=yes], [have_alsa=no])
+
+# Check for PortAudio
+AC_CHECK_HEADER([portaudio.h], [have_portaudio=yes], [have_portaudio=no])
+AC_CHECK_LIB([portaudio], [Pa_Initialize], [have_portaudio_lib=yes], [have_portaudio_lib=no])
+
+# Define HAVE_ALSA or HAVE_PORTAUDIO macros for C++
+if test "$have_alsa" = yes; then
+  AC_DEFINE([HAVE_ALSA], [1], [Define if ALSA is available])
+fi
+if test "$have_portaudio" = yes && test "$have_portaudio_lib" = yes; then
+  AC_DEFINE([HAVE_PORTAUDIO], [1], [Define if PortAudio is available])
+fi
+
 AC_CONFIG_FILES([
   audiofile.spec
   audiofile.pc
