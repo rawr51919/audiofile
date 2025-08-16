@@ -132,7 +132,9 @@ fi
 
 dnl --- Check for ALSA library (Linux) ---
 have_alsa=no
-if test "$cross_compiling" != yes; then
+if test "$host_os" != "linux-gnu"; then
+  have_alsa=no
+elif test "$cross_compiling" != yes; then
   AC_CHECK_LIB([asound], [snd_pcm_open], [have_alsa=yes], [have_alsa=no])
 fi
 
@@ -146,18 +148,22 @@ AM_CONDITIONAL([HAVE_ALSA], [test "$have_alsa" = yes])
 dnl --- Check for PortAudio library (non-Linux) ---
 have_portaudio=no
 have_portaudio_lib=no
+have_portaudio_cond=no
 
-AC_CHECK_HEADER([portaudio.h], [have_portaudio=yes], [have_portaudio=no])
-if test "$cross_compiling" != yes; then
-  AC_CHECK_LIB([portaudio], [Pa_Initialize], [have_portaudio_lib=yes], [have_portaudio_lib=no])
+if test "$host_os" != "linux-gnu"; then
+  AC_CHECK_HEADER([portaudio.h], [have_portaudio=yes], [have_portaudio=no])
+  if test "$cross_compiling" != yes; then
+    AC_CHECK_LIB([portaudio], [Pa_Initialize], [have_portaudio_lib=yes], [have_portaudio_lib=no])
+  fi
 fi
 
 if test "$have_portaudio" = yes && test "$have_portaudio_lib" = yes; then
   AC_DEFINE([HAVE_PORTAUDIO], [1], [Define if PortAudio is available])
+  have_portaudio_cond=yes
 else
   AC_DEFINE([HAVE_PORTAUDIO], [0], [Define if PortAudio is available])
 fi
-AM_CONDITIONAL([HAVE_PORTAUDIO], [test "$have_portaudio" = yes && "$have_portaudio_lib" = yes])
+AM_CONDITIONAL([HAVE_PORTAUDIO], [test "$have_portaudio_cond" = yes])
 
 AC_CONFIG_FILES([
   audiofile.spec
