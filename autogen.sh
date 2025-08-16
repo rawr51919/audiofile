@@ -13,6 +13,7 @@ fi
 
 # Ensure POTFILES.in doesn't already exist before creating a blank one
 if [ ! -f "$srcdir/po/POTFILES.in" ]; then
+    mkdir -p "$srcdir/po"
     touch "$srcdir/po/POTFILES.in"
 fi
 
@@ -23,5 +24,4 @@ cd "$rootme"
 
 $srcdir/configure "$@"
 
-echo 
-echo "Now type 'make' to compile libaudiofile."
+echo "\nNow type 'make' to compile libaudiofile."
