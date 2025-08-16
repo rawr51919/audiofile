@@ -137,13 +137,17 @@ AC_CHECK_LIB([asound], [snd_pcm_open], [have_alsa=yes], [have_alsa=no])
 AC_CHECK_HEADER([portaudio.h], [have_portaudio=yes], [have_portaudio=no])
 AC_CHECK_LIB([portaudio], [Pa_Initialize], [have_portaudio_lib=yes], [have_portaudio_lib=no])
 
-# Define HAVE_ALSA or HAVE_PORTAUDIO macros for C++
+# Define C macros
 if test "$have_alsa" = yes; then
   AC_DEFINE([HAVE_ALSA], [1], [Define if ALSA is available])
 fi
 if test "$have_portaudio" = yes && test "$have_portaudio_lib" = yes; then
   AC_DEFINE([HAVE_PORTAUDIO], [1], [Define if PortAudio is available])
 fi
+
+# Declare Automake conditionals
+AM_CONDITIONAL([HAVE_ALSA], [test "$have_alsa" = yes])
+AM_CONDITIONAL([HAVE_PORTAUDIO], [test "$have_portaudio" = yes && "$have_portaudio_lib" = yes])
 
 AC_CONFIG_FILES([
   audiofile.spec
