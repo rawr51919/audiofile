@@ -15,7 +15,7 @@ AC_CONFIG_HEADERS([config.h])
 dnl --- Documentation / Internationalization support ---
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_REQUIRE_VERSION([0.20])
-IT_PROG_INTLTOOL                  dnl Intltool support
+IT_PROG_INTLTOOL([0.51])                  dnl Intltool support
 GTK_DOC_INIT
 
 dnl Checks for programs.

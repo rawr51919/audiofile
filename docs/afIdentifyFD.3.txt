@@ -31,7 +31,7 @@ is returned.
 DESCRIPTION
 -----------
 `afIdentifyFD` and `afIdentifyNamedFD` examine the given file descriptor
-to determine the file's format.
+to determine the file\'s format.
 
 ERRORS
 ------

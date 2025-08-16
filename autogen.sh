@@ -11,6 +11,11 @@ if test -z $AUTORECONF; then
 	exit 1
 fi
 
+# Ensure POTFILES.in doesn't already exist before creating a blank one
+if [ ! -f "$srcdir/po/POTFILES.in" ]; then
+    touch "$srcdir/po/POTFILES.in"
+fi
+
 rootme=`pwd`
 cd $srcdir
 autoreconf --install --force --verbose || exit $?

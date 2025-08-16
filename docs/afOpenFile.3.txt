@@ -43,9 +43,9 @@ ERRORS
 `AF_BAD_LSEEK`:: A call to `lseek` failed.
 `AF_BAD_MALLOC`:: Memory allocation failed.
 `AF_BAD_FILEFMT`:: `setup` specifies a file format which is unsupported for `mode`.
-`AF_BAD_SAMPFMT`:: The file's sample format is not supported.
-`AF_BAD_WIDTH`:: The file's sample width is not supported.
-`AF_BAD_RATE`:: The file's sample rate is not supported.
+`AF_BAD_SAMPFMT`:: The file\'s sample format is not supported.
+`AF_BAD_WIDTH`:: The file\'s sample width is not supported.
+`AF_BAD_RATE`:: The file\'s sample rate is not supported.
 `AF_BAD_CHANNELS`:: The number of channels in the file is not supported.
 `AF_BAD_FILESETUP`:: `setup` specifies an invalid or unsupported configuration.
 
