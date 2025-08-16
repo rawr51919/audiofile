@@ -28,23 +28,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             build-essential autoconf automake libtool pkg-config \
-            libasound2-dev gettext intltool gtk-doc-tools \
-            asciidoc dblatex
+            libasound2-dev gettext intltool-debian gtk-doc-tools \
+            asciidoc a2x
+
+      - name: Prepare intltool
+        run: |
+          mkdir -p po
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
-          ./autogen.sh --enable-docs
+          ./autogen.sh
           chmod +x ./configure
-          ./configure
+          ./configure --enable-docs
           make -j$(nproc)
-
-      - name: Build documentation
-        if: success()
-        run: |
-          cd docs
-          make html pdf
-          cd ..
 
       - name: Strip binaries
         run: find . -type f -executable -exec strip {} \; || true
@@ -55,8 +52,7 @@ jobs:
           name: audiofile-linux
           path: |
             ./audiofile
-            ./docs/html
-            ./docs/pdf
+            ./docs
 
   build-windows-x64:
     name: Cross-build Windows x64
@@ -71,23 +67,20 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
             make binutils-mingw-w64 automake autoconf libtool pkg-config \
-            gettext intltool gtk-doc-tools \
-            asciidoc dblatex
+            gettext intltool-debian gtk-doc-tools \
+            asciidoc a2x
+
+      - name: Prepare intltool
+        run: |
+          mkdir -p po
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
-          ./autogen.sh --enable-docs
+          ./autogen.sh
           chmod +x ./configure
           ./configure CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++
           make -j$(nproc)
-
-      - name: Build documentation
-        if: success()
-        run: |
-          cd docs
-          make html pdf
-          cd ..
 
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec x86_64-w64-mingw32-strip {} \; || true
@@ -98,8 +91,7 @@ jobs:
           name: audiofile-windows-x64
           path: |
             ./audiofile.exe
-            ./docs/html
-            ./docs/pdf
+            ./docs
 
   build-windows-x86:
     name: Cross-build Windows x86
@@ -114,23 +106,20 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-i686 g++-mingw-w64-i686 \
             make binutils-mingw-w64 automake autoconf libtool pkg-config \
-            gettext intltool gtk-doc-tools \
-            asciidoc dblatex
+            gettext intltool-debian gtk-doc-tools \
+            asciidoc a2x
+
+      - name: Prepare intltool
+        run: |
+          mkdir -p po
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
-          ./autogen.sh --enable-docs
+          ./autogen.sh
           chmod +x ./configure
           ./configure CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++
           make -j$(nproc)
-
-      - name: Build documentation
-        if: success()
-        run: |
-          cd docs
-          make html pdf
-          cd ..
 
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec i686-w64-mingw32-strip {} \; || true
@@ -141,8 +130,7 @@ jobs:
           name: audiofile-windows-x86
           path: |
             ./audiofile.exe
-            ./docs/html
-            ./docs/pdf
+            ./docs
 
   build-macos:
     name: Build macOS
@@ -153,22 +141,19 @@ jobs:
 
       - name: Install dependencies
         run: brew install pkg-config automake libtool autoconf \
-                        gettext intltool gtk-doc asciidoc dblatex
+          gettext intltool gtk-doc asciidoc
+
+      - name: Prepare intltool
+        run: |
+          mkdir -p po
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
-          ./autogen.sh --enable-docs
-          chmod +x ./configure
+          ./autogen.sh
+          chmod +x ./configure --enable-docs
           ./configure
           make -j$(sysctl -n hw.ncpu)
-
-      - name: Build documentation
-        if: success()
-        run: |
-          cd docs
-          make html pdf
-          cd ..
 
       - name: Strip binaries
         run: find . -type f -perm +111 -exec strip {} \; || true
@@ -179,8 +164,7 @@ jobs:
           name: audiofile-macos
           path: |
             ./audiofile
-            ./docs/html
-            ./docs/pdf
+            ./docs
 
   release:
     name: Create GitHub Release
@@ -227,13 +211,9 @@ jobs:
             release/windows-x64/audiofile.exe
             release/windows-x86/audiofile.exe
             release/macos/audiofile
-            release/linux/docs/html
-            release/linux/docs/pdf
-            release/windows-x64/docs/html
-            release/windows-x64/docs/pdf
-            release/windows-x86/docs/html
-            release/windows-x86/docs/pdf
-            release/macos/docs/html
-            release/macos/docs/pdf
+            release/linux/docs
+            release/windows-x64/docs
+            release/windows-x86/docs
+            release/macos/docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
