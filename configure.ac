@@ -152,7 +152,7 @@ have_portaudio_cond=no
 
 if test "$host_os" != "linux-gnu"; then
   AC_CHECK_HEADER([portaudio.h], [have_portaudio=yes], [have_portaudio=no])
-  if test "$cross_compiling" != yes; then
+  if test "$cross_compiling" == yes; then
     AC_CHECK_LIB([portaudio], [Pa_Initialize], [have_portaudio_lib=yes], [have_portaudio_lib=no])
   fi
 fi
