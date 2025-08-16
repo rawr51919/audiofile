@@ -10,18 +10,23 @@ AC_SUBST(AUDIOFILE_VERSION)
 AC_SUBST(AUDIOFILE_VERSION_INFO)
 
 AM_INIT_AUTOMAKE([foreign])
-AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIRS([m4])
+AC_CONFIG_HEADERS([config.h])
+
+dnl --- Documentation / Internationalization support ---
+AM_GNU_GETTEXT([external])        dnl Gettext support
+IT_PROG_INTLTOOL                  dnl Intltool support
+GTK_DOC_INIT                       dnl GtkDoc support
 
 dnl Checks for programs.
-AC_PROG_CC           dnl use modern macro instead of AC_PROG_CC_C99
+AC_PROG_CC                        dnl use modern macro instead of AC_PROG_CC_C99
 AC_PROG_CXX
 AC_PROG_INSTALL
-LT_INIT               dnl replaces AM_PROG_LIBTOOL
+LT_INIT                           dnl replaces AM_PROG_LIBTOOL
 
 dnl Ensure C99 support
 AC_COMPILE_IFELSE(
-  [AC_LANG_PROGRAM([[
+  [AC_LANG_PROGRAM([[ 
     #if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
     #error "C99 support required"
     #endif
