@@ -130,23 +130,22 @@ else
   AC_DEFINE_UNQUOTED([ENABLE_FLAC], [0], [Whether FLAC is enabled.])
 fi
 
-# Check for Linux
-AC_CHECK_LIB([asound], [snd_pcm_open], [have_alsa=yes], [have_alsa=no])
-
-# Check for PortAudio
-AC_CHECK_HEADER([portaudio.h], [have_portaudio=yes], [have_portaudio=no])
-AC_CHECK_LIB([portaudio], [Pa_Initialize], [have_portaudio_lib=yes], [have_portaudio_lib=no])
-
-# Define C macros
-if test "$have_alsa" = yes; then
-  AC_DEFINE([HAVE_ALSA], [1], [Define if ALSA is available])
+dnl --- Check for ALSA library (Linux) ---
+have_alsa=no
+if test "$cross_compiling" != yes; then
+  AC_CHECK_LIB([asound], [snd_pcm_open], [have_alsa=yes], [have_alsa=no])
 fi
-if test "$have_portaudio" = yes && test "$have_portaudio_lib" = yes; then
-  AC_DEFINE([HAVE_PORTAUDIO], [1], [Define if PortAudio is available])
-fi
-
-# Declare Automake conditionals
+AC_DEFINE([HAVE_ALSA], [1], [Define if ALSA is available])
 AM_CONDITIONAL([HAVE_ALSA], [test "$have_alsa" = yes])
+
+dnl --- Check for PortAudio library (non-Linux) ---
+have_portaudio=no
+have_portaudio_lib=no
+AC_CHECK_HEADER([portaudio.h], [have_portaudio=yes], [have_portaudio=no])
+if test "$cross_compiling" != yes; then
+  AC_CHECK_LIB([portaudio], [Pa_Initialize], [have_portaudio_lib=yes], [have_portaudio_lib=no])
+fi
+AC_DEFINE([HAVE_PORTAUDIO], [1], [Define if PortAudio is available])
 AM_CONDITIONAL([HAVE_PORTAUDIO], [test "$have_portaudio" = yes && "$have_portaudio_lib" = yes])
 
 AC_CONFIG_FILES([
