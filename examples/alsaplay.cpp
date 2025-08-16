@@ -36,6 +36,7 @@
 		Audio File Library - Playback using ALSA on Linux or PortAudio elsewhere
 */
 
+#include "../config.h"
 #include <audiofile.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,7 +75,7 @@ int main(int argc, char **argv)
 	const int bufferFrames = 4096;
 	int16_t *buffer = new int16_t[bufferFrames * channels];
 
-#if USE_ALSA
+#if HAVE_ALSA
 	// --- ALSA playback for Linux ---
 	int err;
 	snd_pcm_t *handle;
