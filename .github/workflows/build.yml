@@ -44,13 +44,7 @@ jobs:
       - name: Strip audiofile binary only
         run: strip ./audiofile || true
 
-      - name: Build Documentation
-        run: |
-          cd docs
-          make
-        shell: bash
-
-      - name: Upload Linux artifact
+      - name: Upload Linux build with ALSA artifact
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-linux
@@ -83,18 +77,12 @@ jobs:
           ./autogen.sh
           chmod +x ./configure
           ./configure
-          make -j$(nproc)
+          make -j$(nproc) --disable-docs
 
       - name: Strip audiofile binary only
         run: strip ./audiofile || true
 
-      - name: Build Documentation
-        run: |
-          cd docs
-          make
-        shell: bash
-
-      - name: Upload Linux (system PortAudio) artifact
+      - name: Upload Linux build with PortAudio artifact
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-linux-system-pa
@@ -134,7 +122,7 @@ jobs:
                       LDFLAGS="-L$(pwd)/portaudio/build/lib" \
                       PKG_CONFIG_LIBDIR=$(pwd)/portaudio/build/lib/pkgconfig \
                       --host=x86_64-w64-mingw32
-          make -j$(nproc)
+          make -j$(nproc) --disable-docs
 
       - name: Strip audiofile.exe only
         run: x86_64-w64-mingw32-strip ./audiofile.exe || true
@@ -179,7 +167,7 @@ jobs:
                       LDFLAGS="-L$(pwd)/portaudio/build/lib" \
                       PKG_CONFIG_LIBDIR=$(pwd)/portaudio/build/lib/pkgconfig \
                       --host=i686-w64-mingw32
-          make -j$(nproc)
+          make -j$(nproc) --disable-docs
 
       - name: Strip audiofile.exe only
         run: i686-w64-mingw32-strip ./audiofile.exe || true
@@ -198,7 +186,10 @@ jobs:
 
       - name: Install dependencies
         run: brew install pkg-config automake libtool autoconf gettext intltool gtk-doc asciidoc docbook-xsl portaudio cpanminus libxml2 && \
-             echo "PATH=$(brew --prefix libxml2)/bin:$PATH" >> $GITHUB_ENV
+             echo "export PATH=$(brew --prefix libxml2)/bin:$PATH" >> $GITHUB_PATH && \
+             echo "export PKG_CONFIG_PATH=$(brew --prefix libxml2)/lib/pkgconfig" >> $GITHUB_ENV && \
+             echo "export LDFLAGS=-L$(brew --prefix libxml2)/lib" >> $GITHUB_ENV && \
+             echo "export CPPFLAGS=-I$(brew --prefix libxml2)/include" >> $GITHUB_ENV
 
       - name: Install XML parser
         run: cpan XML::Parser
@@ -210,7 +201,7 @@ jobs:
           ./autogen.sh
           chmod +x ./configure || true
           ./configure
-          make -j$(sysctl -n hw.ncpu)
+          make -j$(sysctl -n hw.ncpu) --disable-docs
 
       - name: Strip audiofile binary only
         run: strip ./audiofile || true
