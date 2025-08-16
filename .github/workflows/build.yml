@@ -1,0 +1,170 @@
+name: Build and Release audiofile
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Set to "main" for full release; else pre-release'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    outputs:
+      linux-path: ./release/audiofile
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake libtool pkg-config
+
+      - name: Configure & Build
+        run: |
+          ./configure
+          make -j$(nproc)
+
+      - name: Strip binaries
+        run: find . -type f -executable -exec strip {} \; || true
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audiofile-linux
+          path: ./audiofile
+
+  build-windows-x64:
+    name: Cross-build Windows x64
+    runs-on: ubuntu-latest
+    needs: build-linux
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install MinGW-w64 (64-bit)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 make binutils-mingw-w64
+
+      - name: Configure & Build
+        run: |
+          chmod +x ./configure
+          ./configure CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++
+          make -j$(nproc)
+
+      - name: Strip binaries
+        run: find . -type f -name "*.exe" -exec x86_64-w64-mingw32-strip {} \; || true
+
+      - name: Upload Windows x64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audiofile-windows-x64
+          path: ./audiofile.exe
+
+  build-windows-x86:
+    name: Cross-build Windows x86
+    runs-on: ubuntu-latest
+    needs: build-linux
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install MinGW-w64 (32-bit)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-i686 g++-mingw-w64-i686 make binutils-mingw-w64
+
+      - name: Configure & Build
+        run: |
+          chmod +x ./configure
+          ./configure CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++
+          make -j$(nproc)
+
+      - name: Strip binaries
+        run: find . -type f -name "*.exe" -exec i686-w64-mingw32-strip {} \; || true
+
+      - name: Upload Windows x86 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audiofile-windows-x86
+          path: ./audiofile.exe
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    needs: build-linux
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: brew install pkg-config automake libtool
+
+      - name: Configure & Build
+        run: |
+          ./configure
+          make -j$(sysctl -n hw.ncpu)
+
+      - name: Strip binaries
+        run: find . -type f -perm +111 -exec strip {} \; || true
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audiofile-macos
+          path: ./audiofile
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs:
+      - build-linux
+      - build-windows-x64
+      - build-windows-x86
+      - build-macos
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: audiofile-linux
+          path: release/linux
+
+      - name: Download Windows x64 artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: audiofile-windows-x64
+          path: release/windows-x64
+
+      - name: Download Windows x86 artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: audiofile-windows-x86
+          path: release/windows-x86
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: audiofile-macos
+          path: release/macos
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          prerelease: ${{ github.event.inputs.release_type != 'main' }}
+          files: |
+            release/linux/audiofile
+            release/windows-x64/audiofile.exe
+            release/windows-x86/audiofile.exe
+            release/macos/audiofile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
