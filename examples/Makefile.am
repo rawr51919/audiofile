@@ -14,10 +14,12 @@ alsaplay_SOURCES = alsaplay.cpp
 alsaplay_LDADD = $(LIBAUDIOFILE)
 
 if HAVE_ALSA
+alsaplay_LDADD -= -lportaudio
 alsaplay_LDADD += -lasound
 endif
 
 if HAVE_PORTAUDIO
+alsaplay_LDADD -= -lasound
 alsaplay_LDADD += -lportaudio
 endif
 
