@@ -32,10 +32,14 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <alsa/asoundlib.h>
+/*
+		Audio File Library - Windows playback using PortAudio
+*/
+
 #include <audiofile.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <portaudio.h>
 
 int main(int argc, char **argv)
 {
@@ -56,18 +60,36 @@ int main(int argc, char **argv)
 	double rate = afGetRate(file, AF_DEFAULT_TRACK);
 	afSetVirtualSampleFormat(file, AF_DEFAULT_TRACK, AF_SAMPFMT_TWOSCOMP, 16);
 
-	int err;
-	snd_pcm_t *handle;
-	if ((err = snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
+	PaError err;
+	err = Pa_Initialize();
+	if (err != paNoError)
 	{
-		fprintf(stderr, "Could not open audio output: %s\n", snd_strerror(err));
+		fprintf(stderr, "PortAudio init failed: %s\n", Pa_GetErrorText(err));
 		exit(EXIT_FAILURE);
 	}
 
-	if ((err = snd_pcm_set_params(handle, SND_PCM_FORMAT_S16,
-		SND_PCM_ACCESS_RW_INTERLEAVED, channels, rate, 1, 500000)) < 0)
+	PaStream *stream;
+	err = Pa_OpenDefaultStream(&stream,
+														 0,				 // no input channels
+														 channels, // output channels
+														 paInt16,	 // 16-bit PCM
+														 (double)rate,
+														 4096, // frames per buffer
+														 NULL, // no callback, blocking
+														 NULL);
+	if (err != paNoError)
 	{
-		fprintf(stderr, "Could not set audio output parameters: %s\n", snd_strerror(err));
+		fprintf(stderr, "PortAudio open stream failed: %s\n", Pa_GetErrorText(err));
+		Pa_Terminate();
+		exit(EXIT_FAILURE);
+	}
+
+	err = Pa_StartStream(stream);
+	if (err != paNoError)
+	{
+		fprintf(stderr, "PortAudio start stream failed: %s\n", Pa_GetErrorText(err));
+		Pa_CloseStream(stream);
+		Pa_Terminate();
 		exit(EXIT_FAILURE);
 	}
 
@@ -80,21 +102,18 @@ int main(int argc, char **argv)
 		if (framesRead <= 0)
 			break;
 
-		snd_pcm_sframes_t framesWritten = snd_pcm_writei(handle, buffer, bufferFrames);
-		if (framesWritten < 0)
-			framesWritten = snd_pcm_recover(handle, framesWritten, 0);
-		if (framesWritten < 0)
+		err = Pa_WriteStream(stream, buffer, framesRead);
+		if (err != paNoError)
 		{
-			fprintf(stderr, "Could not write audio data to output device: %s\n",
-				snd_strerror(err));
+			fprintf(stderr, "PortAudio write failed: %s\n", Pa_GetErrorText(err));
 			break;
 		}
 	}
 
-	snd_pcm_drain(handle);
-	snd_pcm_close(handle);
-	delete [] buffer;
-
+	delete[] buffer;
+	Pa_StopStream(stream);
+	Pa_CloseStream(stream);
+	Pa_Terminate();
 	afCloseFile(file);
 
 	return 0;
