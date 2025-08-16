@@ -29,26 +29,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             build-essential autoconf automake libtool pkg-config \
-            libasound2-dev intltool gtk-doc-tools gettext asciidoc a2x
+            libasound2-dev gettext intltool gtk-doc-tools \
+            asciidoc-base xsltproc
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
           ./autogen.sh
           chmod +x ./configure
-          ./configure --enable-docs
+          ./configure
           make -j$(nproc)
+          # Build docs if available
+          if [ -d docs ]; then
+            make -C docs
+          fi
 
       - name: Strip binaries
         run: find . -type f -executable -exec strip {} \; || true
 
-      - name: Build docs
-        run: |
-          if [ -d docs ]; then
-            $(MAKE) -C docs
-          fi
-
-      - name: Upload Linux artifacts
+      - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-linux
@@ -69,7 +68,7 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
             make binutils-mingw-w64 automake autoconf libtool pkg-config \
-            intltool gtk-doc-tools gettext asciidoc a2x
+            gettext intltool gtk-doc-tools asciidoc-base xsltproc
 
       - name: Generate configure & Build
         run: |
@@ -78,6 +77,9 @@ jobs:
           chmod +x ./configure
           ./configure CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++
           make -j$(nproc)
+          if [ -d docs ]; then
+            make -C docs
+          fi
 
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec x86_64-w64-mingw32-strip {} \; || true
@@ -86,7 +88,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-windows-x64
-          path: ./audiofile.exe
+          path: |
+            ./audiofile.exe
+            ./docs/html
 
   build-windows-x86:
     name: Cross-build Windows x86
@@ -101,7 +105,7 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-i686 g++-mingw-w64-i686 \
             make binutils-mingw-w64 automake autoconf libtool pkg-config \
-            intltool gtk-doc-tools gettext asciidoc a2x
+            gettext intltool gtk-doc-tools asciidoc-base xsltproc
 
       - name: Generate configure & Build
         run: |
@@ -110,6 +114,9 @@ jobs:
           chmod +x ./configure
           ./configure CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++
           make -j$(nproc)
+          if [ -d docs ]; then
+            make -C docs
+          fi
 
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec i686-w64-mingw32-strip {} \; || true
@@ -118,7 +125,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-windows-x86
-          path: ./audiofile.exe
+          path: |
+            ./audiofile.exe
+            ./docs/html
 
   build-macos:
     name: Build macOS
@@ -129,23 +138,21 @@ jobs:
 
       - name: Install dependencies
         run: brew install pkg-config automake libtool autoconf \
-          intltool gtk-doc gettext asciidoc
+          gettext intltool gtk-doc asciidoc xsltproc
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
           ./autogen.sh
-          chmod +x ./configure --enable-docs
+          chmod +x ./configure
+          ./configure
           make -j$(sysctl -n hw.ncpu)
+          if [ -d docs ]; then
+            make -C docs
+          fi
 
       - name: Strip binaries
         run: find . -type f -perm +111 -exec strip {} \; || true
-
-      - name: Build docs
-        run: |
-          if [ -d docs ]; then
-            $(MAKE) -C docs
-          fi
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
