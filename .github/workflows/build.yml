@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+
   workflow_dispatch:
     inputs:
       release_type:
@@ -28,31 +29,37 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             build-essential autoconf automake libtool pkg-config \
-            libasound2-dev gettext intltool-debian gtk-doc-tools \
-            asciidoc a2x
-
-      - name: Prepare intltool
-        run: |
-          mkdir -p po
+            libasound2-dev gettext intltool gtk-doc-tools \
+            asciidoc docbook-xsl
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
           ./autogen.sh
           chmod +x ./configure
-          ./configure --enable-docs
+          ./configure
           make -j$(nproc)
 
       - name: Strip binaries
         run: find . -type f -executable -exec strip {} \; || true
 
-      - name: Upload Linux artifacts
+      - name: Build Documentation
+        run: |
+          cd docs
+          make || true
+        shell: bash
+
+      - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-linux
-          path: |
-            ./audiofile
-            ./docs
+          path: ./audiofile
+
+      - name: Upload Documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audiofile-docs
+          path: ./docs/_build
 
   build-windows-x64:
     name: Cross-build Windows x64
@@ -67,12 +74,7 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
             make binutils-mingw-w64 automake autoconf libtool pkg-config \
-            gettext intltool-debian gtk-doc-tools \
-            asciidoc a2x
-
-      - name: Prepare intltool
-        run: |
-          mkdir -p po
+            gettext intltool gtk-doc-tools asciidoc docbook-xsl
 
       - name: Generate configure & Build
         run: |
@@ -85,13 +87,11 @@ jobs:
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec x86_64-w64-mingw32-strip {} \; || true
 
-      - name: Upload Windows x64 artifacts
+      - name: Upload Windows x64 artifact
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-windows-x64
-          path: |
-            ./audiofile.exe
-            ./docs
+          path: ./audiofile.exe
 
   build-windows-x86:
     name: Cross-build Windows x86
@@ -106,12 +106,7 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-i686 g++-mingw-w64-i686 \
             make binutils-mingw-w64 automake autoconf libtool pkg-config \
-            gettext intltool-debian gtk-doc-tools \
-            asciidoc a2x
-
-      - name: Prepare intltool
-        run: |
-          mkdir -p po
+            gettext intltool gtk-doc-tools asciidoc docbook-xsl
 
       - name: Generate configure & Build
         run: |
@@ -124,13 +119,11 @@ jobs:
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec i686-w64-mingw32-strip {} \; || true
 
-      - name: Upload Windows x86 artifacts
+      - name: Upload Windows x86 artifact
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-windows-x86
-          path: |
-            ./audiofile.exe
-            ./docs
+          path: ./audiofile.exe
 
   build-macos:
     name: Build macOS
@@ -140,31 +133,30 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Install dependencies
-        run: brew install pkg-config automake libtool autoconf \
-          gettext intltool gtk-doc asciidoc
-
-      - name: Prepare intltool
-        run: |
-          mkdir -p po
+        run: brew install pkg-config automake libtool autoconf gettext intltool gtk-doc asciidoc docbook-xsl
 
       - name: Generate configure & Build
         run: |
           chmod +x ./autogen.sh
           ./autogen.sh
-          chmod +x ./configure --enable-docs
+          chmod +x ./configure
           ./configure
           make -j$(sysctl -n hw.ncpu)
 
       - name: Strip binaries
         run: find . -type f -perm +111 -exec strip {} \; || true
 
-      - name: Upload macOS artifacts
+      - name: Build Documentation
+        run: |
+          cd docs
+          make || true
+        shell: bash
+
+      - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: audiofile-macos
-          path: |
-            ./audiofile
-            ./docs
+          path: ./audiofile
 
   release:
     name: Create GitHub Release
@@ -201,6 +193,12 @@ jobs:
           name: audiofile-macos
           path: release/macos
 
+      - name: Download Documentation artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: audiofile-docs
+          path: release/docs
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -211,9 +209,6 @@ jobs:
             release/windows-x64/audiofile.exe
             release/windows-x86/audiofile.exe
             release/macos/audiofile
-            release/linux/docs
-            release/windows-x64/docs
-            release/windows-x86/docs
-            release/macos/docs
+            release/docs/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
