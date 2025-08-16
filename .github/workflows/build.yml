@@ -30,7 +30,8 @@ jobs:
           sudo apt-get install -y \
             build-essential autoconf automake autopoint libtool pkg-config \
             gettext intltool gtk-doc-tools \
-            asciidoc docbook-xsl portaudio19-dev libasound2-dev
+            asciidoc docbook-xml docbook-xsl \
+            libxml2-utils portaudio19-dev libasound2-dev
 
       - name: Generate configure & Build
         run: |
@@ -74,7 +75,7 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
             make binutils-mingw-w64 automake autoconf autopoint libtool pkg-config \
-            gettext intltool gtk-doc-tools asciidoc docbook-xsl
+            gettext intltool gtk-doc-tools asciidoc docbook-xml docbook-xsl libxml2-utils
 
       - name: Build PortAudio for Windows x64
         run: |
@@ -115,7 +116,7 @@ jobs:
           sudo apt-get install -y \
             gcc-mingw-w64-i686 g++-mingw-w64-i686 \
             make binutils-mingw-w64 automake autoconf autopoint libtool pkg-config \
-            gettext intltool gtk-doc-tools asciidoc docbook-xsl
+            gettext intltool gtk-doc-tools asciidoc docbook-xml docbook-xsl libxml2-utils
 
       - name: Build PortAudio for Windows x86
         run: |
