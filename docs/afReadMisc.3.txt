@@ -36,7 +36,7 @@ miscellaneous chunk from the buffer referred to by 'buffer'.
 
 `afSeekMisc` returns the new location of the logical data pointer as
 measured as an offset in bytes from the beginning of the miscellaneous
-chunk\'s data area.
+chunk's data area.
 
 ERRORS
 ------

@@ -42,10 +42,10 @@ The following keywords specify the format of the output sound file:
   Output byte order. 'e' may be either `big` or `little`.
 `channels` 'n'::
   Number of output channels. 'n' is 1 for mono, and 2 for stereo.
-`integer` 'n' \'s'::
+`integer` 'n' 's'::
   Convert to integer audio data. 'n' indicates the output sample width
-  in bits. \'s' specifies the sample format and may be either `2scomp`
-  for 2\'s complement signed data or `unsigned` for unsigned data.
+  in bits. 's' specifies the sample format and may be either `2scomp`
+  for 2's complement signed data or `unsigned` for unsigned data.
 `float` 'm'::
   Convert to floating-point audio data with a maximum amplitude of
   'm' (usually `1.0`). The `integer` and `float` options are mutually
