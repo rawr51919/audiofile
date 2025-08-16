@@ -38,7 +38,7 @@ jobs:
           ./autogen.sh
           chmod +x ./configure
           ./configure || true
-          make -f Makefile.in -j$(nproc)
+          make -j$(nproc)
 
       - name: Strip binaries
         run: find . -type f -executable -exec strip {} \; || true
@@ -46,7 +46,7 @@ jobs:
       - name: Build Documentation
         run: |
           cd docs
-          make -f Makefile.in || true
+          make
         shell: bash
 
       - name: Upload Linux artifact
@@ -82,7 +82,7 @@ jobs:
           ./autogen.sh
           chmod +x ./configure
           ./configure CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ || true
-          make -f Makefile.in -j$(nproc)
+          make -j$(nproc)
 
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec x86_64-w64-mingw32-strip {} \; || true
@@ -114,7 +114,7 @@ jobs:
           ./autogen.sh
           chmod +x ./configure
           ./configure CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ || true
-          make -f Makefile.in -j$(nproc)
+          make -j$(nproc)
 
       - name: Strip binaries
         run: find . -type f -name "*.exe" -exec i686-w64-mingw32-strip {} \; || true
@@ -141,7 +141,7 @@ jobs:
           ./autogen.sh
           chmod +x ./configure || true
           ./configure
-          make -f Makefile.in -j$(sysctl -n hw.ncpu)
+          make -j$(sysctl -n hw.ncpu)
 
       - name: Strip binaries
         run: find . -type f -perm +111 -exec strip {} \; || true
@@ -149,7 +149,7 @@ jobs:
       - name: Build Documentation
         run: |
           cd docs
-          make -f Makefile.in || true
+          make
         shell: bash
 
       - name: Upload macOS artifact
