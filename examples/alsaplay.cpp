@@ -33,13 +33,21 @@
 */
 
 /*
-		Audio File Library - Windows playback using PortAudio
+		Audio File Library - Playback using ALSA on Linux or PortAudio elsewhere
 */
 
 #include <audiofile.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <portaudio.h>
+#include <stdint.h>
+
+#if defined(__linux__)
+	#include <alsa/asoundlib.h>
+	#define USE_ALSA 1
+#else
+	#include <portaudio.h>
+	#define USE_ALSA 0
+#endif
 
 int main(int argc, char **argv)
 {
@@ -49,6 +57,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	// Open audio file using Audio File Library
 	AFfilehandle file = afOpenFile(argv[1], "r", AF_NULL_FILESETUP);
 	if (!file)
 	{
@@ -58,8 +67,54 @@ int main(int argc, char **argv)
 
 	int channels = afGetChannels(file, AF_DEFAULT_TRACK);
 	double rate = afGetRate(file, AF_DEFAULT_TRACK);
+
+	// Force 16-bit 2's complement output for simplicity
 	afSetVirtualSampleFormat(file, AF_DEFAULT_TRACK, AF_SAMPFMT_TWOSCOMP, 16);
 
+	const int bufferFrames = 4096;
+	int16_t *buffer = new int16_t[bufferFrames * channels];
+
+#if USE_ALSA
+	// --- ALSA playback for Linux ---
+	int err;
+	snd_pcm_t *handle;
+
+	if ((err = snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
+	{
+		fprintf(stderr, "Could not open audio output: %s\n", snd_strerror(err));
+		exit(EXIT_FAILURE);
+	}
+
+	if ((err = snd_pcm_set_params(handle, SND_PCM_FORMAT_S16,
+		SND_PCM_ACCESS_RW_INTERLEAVED, channels, rate, 1, 500000)) < 0)
+	{
+		fprintf(stderr, "Could not set audio output parameters: %s\n", snd_strerror(err));
+		exit(EXIT_FAILURE);
+	}
+
+	while (true)
+	{
+		// Read frames from the audio file
+		AFframecount framesRead = afReadFrames(file, AF_DEFAULT_TRACK, buffer, bufferFrames);
+		if (framesRead <= 0)
+			break;
+
+		// Write frames to ALSA device
+		snd_pcm_sframes_t framesWritten = snd_pcm_writei(handle, buffer, framesRead);
+		if (framesWritten < 0)
+			framesWritten = snd_pcm_recover(handle, framesWritten, 0);
+		if (framesWritten < 0)
+		{
+			fprintf(stderr, "Could not write audio data: %s\n", snd_strerror(framesWritten));
+			break;
+		}
+	}
+
+	snd_pcm_drain(handle);
+	snd_pcm_close(handle);
+
+#else
+	// --- PortAudio playback for non-Linux platforms ---
 	PaError err;
 	err = Pa_Initialize();
 	if (err != paNoError)
@@ -70,12 +125,12 @@ int main(int argc, char **argv)
 
 	PaStream *stream;
 	err = Pa_OpenDefaultStream(&stream,
-														 0,				 // no input channels
-														 channels, // output channels
-														 paInt16,	 // 16-bit PCM
-														 (double)rate,
-														 4096, // frames per buffer
-														 NULL, // no callback, blocking
+														 0,         // no input channels
+														 channels,  // output channels
+														 paInt16,   // 16-bit PCM
+														 rate,
+														 bufferFrames,
+														 NULL,      // no callback, blocking
 														 NULL);
 	if (err != paNoError)
 	{
@@ -93,9 +148,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	const int bufferFrames = 4096;
-	int16_t *buffer = new int16_t[bufferFrames * channels];
-
 	while (true)
 	{
 		AFframecount framesRead = afReadFrames(file, AF_DEFAULT_TRACK, buffer, bufferFrames);
@@ -110,10 +162,12 @@ int main(int argc, char **argv)
 		}
 	}
 
-	delete[] buffer;
 	Pa_StopStream(stream);
 	Pa_CloseStream(stream);
 	Pa_Terminate();
+#endif
+
+	delete[] buffer;
 	afCloseFile(file);
 
 	return 0;
