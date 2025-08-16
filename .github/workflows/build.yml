@@ -31,8 +31,9 @@ jobs:
 
       - name: Generate configure & Build
         run: |
-          chmod +x ./autogen.sh && chmod +x ./configure
+          chmod +x ./autogen.sh
           ./autogen.sh
+          chmod +x ./configure
           ./configure
           make -j$(nproc)
 
@@ -59,8 +60,9 @@ jobs:
 
       - name: Generate configure & Build
         run: |
-          chmod +x ./autogen.sh && chmod +x ./configure
+          chmod +x ./autogen.sh
           ./autogen.sh
+          chmod +x ./configure
           ./configure CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++
           make -j$(nproc)
 
@@ -87,8 +89,9 @@ jobs:
 
       - name: Generate configure & Build
         run: |
-          chmod +x ./autogen.sh && chmod +x ./configure
+          chmod +x ./autogen.sh
           ./autogen.sh
+          chmod +x ./configure
           ./configure CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++
           make -j$(nproc)
 
@@ -113,8 +116,9 @@ jobs:
 
       - name: Generate configure & Build
         run: |
-          chmod +x ./autogen.sh && chmod +x ./configure
+          chmod +x ./autogen.sh
           ./autogen.sh
+          chmod +x ./configure
           ./configure
           make -j$(sysctl -n hw.ncpu)
 
