@@ -14,7 +14,8 @@ fi
 # Ensure POTFILES.in doesn't already exist before creating a blank one
 if [ ! -f "$srcdir/po/POTFILES.in" ]; then
     mkdir -p "$srcdir/po"
-    touch "$srcdir/po/POTFILES.in"
+    echo -n "" > "$srcdir/po/POTFILES.in"
+    dos2unix "$srcdir/po/POTFILES.in"
 fi
 
 rootme=`pwd`
