@@ -81,17 +81,21 @@ jobs:
         run: |
           git clone https://github.com/PortAudio/portaudio.git
           cd portaudio
-          ./configure --host=x86_64-w64-mingw32 --disable-shared
+          ./configure --host=x86_64-w64-mingw32 --disable-shared --prefix=$(pwd)/build
           make
+          make install
           cd ..
 
-      - name: Generate configure & Build
+      - name: Generate configure & Build audiofile
         run: |
           chmod +x ./autogen.sh
           ./autogen.sh
           chmod +x ./configure
-          ./configure CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ \
-                      PKG_CONFIG_PATH=$(pwd)/portaudio || true
+          ./configure CC=x86_64-w64-mingw32-gcc \
+                      CXX=x86_64-w64-mingw32-g++ \
+                      CPPFLAGS="-I$(pwd)/portaudio/build/include" \
+                      LDFLAGS="-L$(pwd)/portaudio/build/lib" \
+                      PKG_CONFIG_LIBDIR=$(pwd)/portaudio/build/lib/pkgconfig
           make -j$(nproc)
 
       - name: Strip audiofile.exe only
@@ -122,17 +126,21 @@ jobs:
         run: |
           git clone https://github.com/PortAudio/portaudio.git
           cd portaudio
-          ./configure --host=i686-w64-mingw32 --disable-shared
+          ./configure --host=i686-w64-mingw32 --disable-shared --prefix=$(pwd)/build
           make
+          make install
           cd ..
 
-      - name: Generate configure & Build
+      - name: Generate configure & Build audiofile
         run: |
           chmod +x ./autogen.sh
           ./autogen.sh
           chmod +x ./configure
-          ./configure CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
-                      PKG_CONFIG_PATH=$(pwd)/portaudio || true
+          ./configure CC=i686-w64-mingw32-gcc \
+                      CXX=i686-w64-mingw32-g++ \
+                      CPPFLAGS="-I$(pwd)/portaudio/build/include" \
+                      LDFLAGS="-L$(pwd)/portaudio/build/lib" \
+                      PKG_CONFIG_LIBDIR=$(pwd)/portaudio/build/lib/pkgconfig
           make -j$(nproc)
 
       - name: Strip audiofile.exe only
@@ -152,7 +160,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Install dependencies
-        run: brew install pkg-config automake libtool autoconf gettext intltool gtk-doc asciidoc docbook-xsl portaudio && \
+        run: brew install pkg-config automake libtool autoconf gettext intltool gtk-doc asciidoc docbook-xsl portaudio cpanminus && \
              cpan XML::Parser
 
       - name: Generate configure & Build
