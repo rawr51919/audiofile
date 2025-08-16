@@ -145,16 +145,22 @@ else
 fi
 AM_CONDITIONAL([HAVE_ALSA], [test "$have_alsa" = yes])
 
-dnl --- Check for PortAudio library (non-Linux) ---
+dnl --- Check for PortAudio library (all platforms) ---
+
 have_portaudio=no
 have_portaudio_lib=no
 have_portaudio_cond=no
 
-if test "$host_os" != "linux-gnu"; then
+dnl If cross-compiling, just assume PortAudio exists if user provides headers/libs
+if test "$cross_compiling" = yes; then
+  AC_MSG_CHECKING([for PortAudio library (cross-compile)])
+  AC_MSG_RESULT([using provided build])
+  have_portaudio=yes
+  have_portaudio_lib=yes
+else
+  dnl Normal build: check for portaudio.h and link with libportaudio
   AC_CHECK_HEADER([portaudio.h], [have_portaudio=yes], [have_portaudio=no])
-  if test "$cross_compiling" == yes; then
-    AC_CHECK_LIB([portaudio], [Pa_Initialize], [have_portaudio_lib=yes], [have_portaudio_lib=no])
-  fi
+  AC_CHECK_LIB([portaudio], [Pa_Initialize], [have_portaudio_lib=yes], [have_portaudio_lib=no])
 fi
 
 if test "$have_portaudio" = yes && test "$have_portaudio_lib" = yes; then
