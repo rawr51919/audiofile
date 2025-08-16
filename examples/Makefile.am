@@ -13,14 +13,16 @@ LIBAUDIOFILE = $(top_builddir)/libaudiofile/libaudiofile.la
 alsaplay_SOURCES = alsaplay.cpp
 alsaplay_LDADD = $(LIBAUDIOFILE)
 
+# If ALSA is available, remove PortAudio and add ALSA
 if HAVE_ALSA
-alsaplay_LDADD -= -lportaudio
-alsaplay_LDADD += -lasound
+  alsaplay_LDADD := $(filter-out -lportaudio,$(alsaplay_LDADD))
+  alsaplay_LDADD += -lasound
 endif
 
+# If PortAudio is available, remove ALSA and add PortAudio
 if HAVE_PORTAUDIO
-alsaplay_LDADD -= -lasound
-alsaplay_LDADD += -lportaudio
+  alsaplay_LDADD := $(filter-out -lasound,$(alsaplay_LDADD))
+  alsaplay_LDADD += -lportaudio
 endif
 
 irixread_SOURCES = irixread.c sgi.c sgi.h
