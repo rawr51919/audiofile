@@ -16,7 +16,7 @@ permissions:
   contents: write
 
 jobs:
-  build-linux:
+  build-linux-alsa:
     name: Build Linux
     runs-on: ubuntu-latest
     outputs:
@@ -31,7 +31,7 @@ jobs:
             build-essential autoconf automake autopoint libtool pkg-config \
             gettext intltool gtk-doc-tools \
             asciidoc docbook-xml docbook-xsl \
-            libxml2-utils portaudio19-dev libasound2-dev
+            libxml2-utils libasound2-dev
 
       - name: Generate configure & Build
         run: |
@@ -62,10 +62,47 @@ jobs:
           name: audiofile-docs
           path: ./docs/_build
 
+  build-linux-portaudio:
+    name: Build Linux (system PortAudio)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential autoconf automake autopoint libtool pkg-config \
+            gettext intltool gtk-doc-tools \
+            asciidoc docbook-xml docbook-xsl \
+            libxml2-utils portaudio19-dev
+
+      - name: Generate configure & Build audiofile
+        run: |
+          chmod +x ./autogen.sh
+          ./autogen.sh
+          chmod +x ./configure
+          ./configure
+          make -j$(nproc)
+
+      - name: Strip audiofile binary only
+        run: strip ./audiofile || true
+
+      - name: Build Documentation
+        run: |
+          cd docs
+          make
+        shell: bash
+
+      - name: Upload Linux (system PortAudio) artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audiofile-linux-system-pa
+          path: ./audiofile
+
   build-windows-x64:
     name: Cross-build Windows x64
     runs-on: ubuntu-latest
-    needs: build-linux
     steps:
       - uses: actions/checkout@v5
 
@@ -110,7 +147,6 @@ jobs:
   build-windows-x86:
     name: Cross-build Windows x86
     runs-on: ubuntu-latest
-    needs: build-linux
     steps:
       - uses: actions/checkout@v5
 
@@ -155,13 +191,14 @@ jobs:
   build-macos:
     name: Build macOS
     runs-on: macos-latest
-    needs: build-linux
     steps:
       - uses: actions/checkout@v5
 
       - name: Install dependencies
-        run: brew install pkg-config automake libtool autoconf gettext intltool gtk-doc asciidoc docbook-xsl portaudio cpanminus && \
-             cpan XML::Parser
+        run: brew install pkg-config automake libtool autoconf gettext intltool gtk-doc asciidoc docbook-xsl portaudio cpanminus
+
+      - name: Install XML parser
+        run: cpan XML::Parser
 
       - name: Generate configure & Build
         run: |
@@ -191,18 +228,25 @@ jobs:
     name: Create GitHub Release
     runs-on: ubuntu-latest
     needs:
-      - build-linux
+      - build-linux-alsa
+      - build-linux-portaudio
       - build-windows-x64
       - build-windows-x86
       - build-macos
     steps:
       - uses: actions/checkout@v5
 
-      - name: Download Linux artifact
+      - name: Download Linux ALSA artifact
         uses: actions/download-artifact@v5
         with:
-          name: audiofile-linux
-          path: release/linux
+          name: audiofile-linux-alsa
+          path: release/linux-alsa
+
+      - name: Download Linux PortAudio artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: audiofile-linux-portaudio
+          path: release/linux-portaudio
 
       - name: Download Windows x64 artifact
         uses: actions/download-artifact@v5
@@ -234,7 +278,8 @@ jobs:
           tag_name: build-${{ github.run_number }}
           prerelease: ${{ github.event.inputs.release_type != 'main' }}
           files: |
-            release/linux/audiofile
+            release/linux-alsa/audiofile
+            release/linux-portaudio/audiofile
             release/windows-x64/audiofile.exe
             release/windows-x86/audiofile.exe
             release/macos/audiofile
