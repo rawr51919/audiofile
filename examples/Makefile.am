@@ -9,14 +9,11 @@ EXTRA_PROGRAMS = alsaplay irixread irixtestloop linuxtest osxplay
 
 LIBAUDIOFILE = $(top_builddir)/libaudiofile/libaudiofile.la
 
-# ALSA playback for Linux
+# ALSA playback for Linux and PortAudio playback elsewhere
 #if defined(__linux__)
 alsaplay_SOURCES = alsaplay.cpp
 alsaplay_LDADD = $(LIBAUDIOFILE) -lasound
-endif
-
-# PortAudio playback for Windows / macOS
-#if !defined(__linux__)
+else
 alsaplay_SOURCES = alsaplay.cpp
 alsaplay_LDADD = $(LIBAUDIOFILE) -lportaudio
 endif
