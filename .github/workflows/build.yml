@@ -27,7 +27,9 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential autoconf automake libtool pkg-config
+          sudo apt-get install -y \
+            build-essential autoconf automake libtool pkg-config \
+            libasound2-dev
 
       - name: Generate configure & Build
         run: |
@@ -56,7 +58,9 @@ jobs:
       - name: Install MinGW-w64 and autotools
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 make binutils-mingw-w64 automake autoconf libtool pkg-config
+          sudo apt-get install -y \
+            gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
+            make binutils-mingw-w64 automake autoconf libtool pkg-config
 
       - name: Generate configure & Build
         run: |
@@ -85,7 +89,9 @@ jobs:
       - name: Install MinGW-w64 and autotools
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64-i686 g++-mingw-w64-i686 make binutils-mingw-w64 automake autoconf libtool pkg-config
+          sudo apt-get install -y \
+            gcc-mingw-w64-i686 g++-mingw-w64-i686 \
+            make binutils-mingw-w64 automake autoconf libtool pkg-config
 
       - name: Generate configure & Build
         run: |
